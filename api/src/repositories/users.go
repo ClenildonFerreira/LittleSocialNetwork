@@ -15,6 +15,25 @@ func NewRepositoryUser(db *sql.DB) *Users {
 	return &Users{db}
 }
 
+// Create inset a user in database
 func (u Users) Create(user models.User) (uint64, error) {
-	return 0, nil
+	statement, erro := u.db.Prepare(
+		"insert into users (name, nick, email, password) values(?, ?, ?, ?)",
+	)
+	if erro != nil {
+		return 0, erro
+	}
+	defer statement.Close()
+
+	expect, erro := statement.Exec(user.Name, user.Nick, user.Email, user.Password)
+	if erro != nil {
+		return 0, erro
+	}
+
+	LastID, erro := expect.LastInsertId()
+	if erro != nil {
+		return 0, erro
+	}
+
+	return uint64(LastID), nil
 }
