@@ -24,6 +24,11 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if erro = user.Prepare(); erro != nil {
+		response.Erro(w, http.StatusBadRequest, erro)
+		return
+	}
+
 	db, erro := db.Conect()
 	if erro != nil {
 		response.Erro(w, http.StatusInternalServerError, erro)
@@ -38,7 +43,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusCreated, user.ID)
+	response.JSON(w, http.StatusCreated, user)
 }
 
 // SearchUsers Search all users saved in the database
