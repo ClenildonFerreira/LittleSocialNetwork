@@ -8,6 +8,10 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 // CreateUser insert user in database
@@ -48,12 +52,48 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 // SearchUsers Search all users saved in the database
 func SearchUsers(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Search all Users!"))
+	nameOrNick := strings.ToLower(r.URL.Query().Get("user"))
+
+	db, erro := db.Conect()
+	if erro != nil {
+		response.Erro(w, http.StatusInternalServerError, erro)
+	}
+	defer db.Close()
+
+	repository := repositories.NewRepositoryUser(db)
+	users, erro := repository.Search(nameOrNick)
+	if erro != nil {
+		response.Erro(w, http.StatusInternalServerError, erro)
+	}
+
+	response.JSON(w, http.StatusOK, users)
 }
 
 // SearchUser Search user saved in the database
 func SearchUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Search User!"))
+	parameters := mux.Vars(r)
+
+	userID, erro := strconv.ParseUint(parameters["userId"], 10, 64)
+	if erro != nil {
+		response.Erro(w, http.StatusBadRequest, erro)
+		return
+	}
+
+	db, erro := db.Conect()
+	if erro != nil {
+		response.Erro(w, http.StatusInternalServerError, erro)
+		return
+	}
+
+	defer db.Close()
+
+	repository := repositories.NewRepositoryUser(db)
+	user, erro := repository.SearchWithID(userID)
+	if erro != nil {
+		response.Erro(w, http.StatusInternalServerError, erro)
+	}
+
+	response.JSON(w, http.StatusOK, user)
 }
 
 // UpdateUser update a user information saved in database
