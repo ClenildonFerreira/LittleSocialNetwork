@@ -4,10 +4,9 @@ import (
 	"api/src/db"
 	"api/src/models"
 	"api/src/repositories"
+	"api/src/response"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -15,26 +14,31 @@ import (
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	bodyResquest, erro := ioutil.ReadAll(r.Body)
 	if erro != nil {
-		log.Fatal(erro)
+		response.Erro(w, http.StatusUnprocessableEntity, erro)
+		return
 	}
 
 	var user models.User
 	if erro = json.Unmarshal(bodyResquest, &user); erro != nil {
-		log.Fatal(erro)
+		response.Erro(w, http.StatusBadRequest, erro)
+		return
 	}
 
 	db, erro := db.Conect()
 	if erro != nil {
-		log.Fatal(erro)
+		response.Erro(w, http.StatusInternalServerError, erro)
+		return
 	}
+	defer db.Close()
 
 	repository := repositories.NewRepositoryUser(db)
-	userId, erro := repository.Create(user)
+	user.ID, erro = repository.Create(user)
 	if erro != nil {
-		log.Fatal(erro)
+		response.Erro(w, http.StatusInternalServerError, erro)
+		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("Id Insert: %d", userId)))
+	response.JSON(w, http.StatusCreated, user.ID)
 }
 
 // SearchUsers Search all users saved in the database
