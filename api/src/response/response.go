@@ -11,9 +11,12 @@ func JSON(w http.ResponseWriter, statusCode int, datas interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 
-	if erro := json.NewEncoder(w).Encode(datas); erro != nil {
-		log.Fatal(erro)
+	if datas != nil {
+		if erro := json.NewEncoder(w).Encode(datas); erro != nil {
+			log.Fatal(erro)
+		}
 	}
+
 }
 
 // Erro return a error in format JSON

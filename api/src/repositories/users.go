@@ -103,3 +103,20 @@ func (u Users) SearchWithID(ID uint64) (models.User, error) {
 
 	return user, nil
 }
+
+// Upadate change user information in database
+func (u Users) Update(ID uint64, user models.User) error {
+	statement, erro := u.db.Prepare(
+		"update users set name_user = ?, nick = ?,  email = ? where id = ?",
+	)
+	if erro != nil {
+		return erro
+	}
+	defer statement.Close()
+
+	if _, erro = statement.Exec(user.Name, user.Nick, user.Email, ID); erro != nil {
+		return erro
+	}
+
+	return nil
+}
